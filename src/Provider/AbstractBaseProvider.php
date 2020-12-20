@@ -271,13 +271,11 @@ abstract class AbstractBaseProvider
      * @param array $query
      * @param AccessTokenInterface|null $accessToken
      * @param array|null $payload
+     * @param array $headers
      * @return array
-     * @throws \Psr\Http\Client\ClientExceptionInterface
      */
-    public function request(string $method, string $url, array $query, AccessTokenInterface $accessToken = null, array $payload = null)
+    public function request(string $method, string $url, array $query, AccessTokenInterface $accessToken = null, array $payload = null, array $headers = [])
     {
-        $headers = [];
-
         $this->prepareRequest(
             $method,
             $this->getBaseUri() . $url,
