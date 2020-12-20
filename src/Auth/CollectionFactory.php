@@ -57,6 +57,7 @@ class CollectionFactory implements FactoryInterface
         OpenIDConnect\Provider\Google::NAME       => OpenIDConnect\Provider\Google::class,
         OpenIDConnect\Provider\Keycloak::NAME     => OpenIDConnect\Provider\Keycloak::class,
         OpenIDConnect\Provider\PixelPin::NAME     => OpenIDConnect\Provider\PixelPin::class,
+        OpenIDConnect\Provider\Talent::NAME       => OpenIDConnect\Provider\Talent::class,
     ];
 
     /**

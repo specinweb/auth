@@ -1,0 +1,214 @@
+<?php
+/**
+ * SocialConnect project
+ * @author Ivan Pralnikov <specinweb@gmail.com>
+ */
+declare(strict_types = 1);
+
+namespace SocialConnect\OpenIDConnect\Provider;
+
+use Psr\Http\Message\RequestInterface;
+use SocialConnect\Common\ArrayHydrator;
+use SocialConnect\Common\Exception\InvalidArgumentException;
+use SocialConnect\JWX\DecodeOptions;
+use SocialConnect\JWX\JWT;
+use SocialConnect\OAuth2\Exception\Unauthorized;
+use SocialConnect\OAuth2\Exception\UnknownAuthorization;
+use SocialConnect\OpenIDConnect\AccessToken;
+use SocialConnect\Provider\AccessTokenInterface;
+use SocialConnect\OpenIDConnect\AbstractProvider;
+use SocialConnect\Common\Entity\User;
+use SocialConnect\Provider\Exception\InvalidAccessToken;
+
+class Talent extends AbstractProvider
+{
+    const NAME = 'talent';
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getOpenIdUrl()
+    {
+        return 'https://talent.kruzhok.org/api/oauth/.well-known/openid-configuration';
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getBaseUri()
+    {
+        return 'https://talent.kruzhok.org/';
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getAuthorizeUri()
+    {
+        return 'https://talent.kruzhok.org/oauth/authorize';
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getRequestTokenUri()
+    {
+        return 'https://talent.kruzhok.org/api/oauth/issue-token/';
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getName()
+    {
+        return self::NAME;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function extractIdentity(AccessTokenInterface $accessToken)
+    {
+        if (!$accessToken instanceof AccessToken) {
+            throw new InvalidArgumentException(
+                '$accessToken must be instance AccessToken'
+            );
+        }
+
+        $jwt = $accessToken->getJwt();
+
+        $hydrator = new ArrayHydrator([
+            'sub' => 'id',
+            'email' => 'email',
+            'email_verified' => 'emailVerified',
+            'name' => 'fullname',
+            'picture' => 'pictureURL',
+            'given_name' => 'firstname',
+            'family_name' => 'lastname',
+        ]);
+
+        /** @var User $user */
+        $user = $hydrator->hydrate(new User(), $jwt->getPayload());
+
+        return $user;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function parseToken(string $body)
+    {
+        if (empty($body)) {
+            throw new InvalidAccessToken('Provider response with empty body');
+        }
+
+        $result = json_decode($body, true);
+        if ($result) {
+            $token = new AccessToken($result);
+
+            return $token;
+        }
+
+        throw new InvalidAccessToken('Provider response with not valid JSON');
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getIdentity(AccessTokenInterface $accessToken)
+    {
+        $response = $this->request('GET', 'api/user', [], $accessToken, null, ['Authorization' => 'Bearer ' . $accessToken->getToken()]);
+
+        $hydrator = new ArrayHydrator([
+            'id' => 'id',
+            'first_name' => 'firstname',
+            'middle_name' => 'middlename',
+            'last_name' => 'lastname',
+            'email' => 'email',
+            'emailVerified' => 'is_valid',
+            'phone' => 'phone',
+            'birthday' => static function ($value, User $user) {
+                $user->setBirthday(
+                    new \DateTime($value)
+                );
+            },
+            'address' => 'address',
+            'avatar' => 'pictureURL',
+            'sex' => static function ($value, User $user) {
+                switch ($value) {
+                    case 'm':
+                        $value = User::SEX_MALE;
+                        break;
+                    case 'f':
+                        $value = User::SEX_FEMALE;
+                        break;
+                }
+                $user->setSex($value);
+            },
+        ]);
+
+        return $hydrator->hydrate(new User(), $response);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getScopeInline()
+    {
+        return implode(' ', $this->scope);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function makeAuthUrl(): string
+    {
+        $urlParameters = $this->getAuthUrlParameters();
+
+        if (!$this->getBoolOption('stateless', false)) {
+            $this->session->set(
+                'oauth2_state',
+                $urlParameters['nonce'] = $this->generateState()
+            );
+        }
+
+        if (count($this->scope) > 0) {
+            $urlParameters['nonce'] = $this->getScopeInline();
+        }
+
+        return $this->getAuthorizeUri() . '?' . http_build_query($urlParameters);
+    }
+
+    public function getAccessTokenByRequestParameters(array $parameters)
+    {
+        if (isset($parameters['error']) && $parameters['error'] === 'access_denied') {
+            throw new Unauthorized();
+        }
+
+        if (!isset($parameters['code'])) {
+            throw new Unauthorized('Unknown code');
+        }
+
+        return $this->getAccessToken($parameters['code']);
+    }
+
+    protected function makeAccessTokenRequest(string $code): RequestInterface
+    {
+        $state = $this->session->get('oauth2_state');
+        if (!$state) {
+            throw new UnknownAuthorization();
+        }
+        $parameters = [
+            'client_id' => $this->consumer->getKey(),
+            'client_secret' => $this->consumer->getSecret(),
+            'code' => $code,
+            'nonce' => $state,
+            'grant_type' => 'authorization_code',
+            'redirect_uri' => $this->getRedirectUrl(),
+        ];
+
+        return $this->httpStack->createRequest($this->requestHttpMethod, $this->getRequestTokenUri())
+            ->withHeader('Content-Type', 'application/x-www-form-urlencoded')
+            ->withBody($this->httpStack->createStream(http_build_query($parameters, '', '&')));
+    }
+}
