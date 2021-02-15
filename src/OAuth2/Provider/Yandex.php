@@ -73,9 +73,11 @@ class Yandex extends \SocialConnect\OAuth2\AbstractProvider
             'default_email' => 'email',
             'real_name' => 'fullname',
             'birthday' => static function ($value, User $user) {
-                $user->setBirthday(
-                    new \DateTime($value)
-                );
+                if (strtotime($value)) {
+                    $user->setBirthday(
+                        new \DateTime($value)
+                    );
+                }
             },
             'login' => 'username',
         ]);

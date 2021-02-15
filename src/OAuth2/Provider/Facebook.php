@@ -63,9 +63,11 @@ class Facebook extends \SocialConnect\OAuth2\AbstractProvider
                 $user->setSex($value === 1 ? User::SEX_FEMALE : User::SEX_MALE);
             },
             'birthday' => static function ($value, User $user) {
-                $user->setBirthday(
-                    new \DateTime($value)
-                );
+                if (strtotime($value)) {
+                    $user->setBirthday(
+                        new \DateTime($value)
+                    );
+                }
             },
             'link' => 'url',
             'locale' => 'locale',

@@ -3,7 +3,7 @@
  * SocialConnect project
  * @author Ivan Pralnikov <specinweb@gmail.com>
  */
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace SocialConnect\OpenIDConnect\Provider;
 
@@ -128,22 +128,26 @@ class Talent extends AbstractProvider
             'emailVerified' => 'is_valid',
             'phone' => 'phone',
             'birthday' => static function ($value, User $user) {
-                $user->setBirthday(
-                    new \DateTime($value)
-                );
+                if (strtotime($value)) {
+                    $user->setBirthday(
+                        new \DateTime($value)
+                    );
+                }
             },
             'address' => 'address',
             'avatar' => 'pictureURL',
             'sex' => static function ($value, User $user) {
-                switch ($value) {
-                    case 'm':
-                        $value = User::SEX_MALE;
-                        break;
-                    case 'f':
-                        $value = User::SEX_FEMALE;
-                        break;
+                if (in_array($value, ['m', 'w'])) {
+                    switch ($value) {
+                        case 'm':
+                            $value = User::SEX_MALE;
+                            break;
+                        case 'w':
+                            $value = User::SEX_FEMALE;
+                            break;
+                    }
+                    $user->setSex($value);
                 }
-                $user->setSex($value);
             },
         ]);
 

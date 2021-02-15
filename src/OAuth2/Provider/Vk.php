@@ -79,9 +79,11 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
             'last_name' => 'lastname',
             'email' => 'email',
             'bdate' => static function ($value, User $user) {
-                $user->setBirthday(
-                    new \DateTime($value)
-                );
+                if (strtotime($value)) {
+                    $user->setBirthday(
+                        new \DateTime($value)
+                    );
+                }
             },
             'sex' => static function ($value, User $user) {
                 $user->setSex($value === 1 ? User::SEX_FEMALE : User::SEX_MALE);
