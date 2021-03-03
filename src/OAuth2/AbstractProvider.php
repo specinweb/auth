@@ -18,39 +18,12 @@ use SocialConnect\Provider\Exception\InvalidResponse;
 
 abstract class AbstractProvider extends AbstractBaseProvider
 {
-    const STATE_KEY = 'oauth2_state:';
-
     /**
      * HTTP method for access token request
      *
      * @var string
      */
     protected $requestHttpMethod = 'POST';
-
-    /**
-     * Save stateKey
-     *
-     * @var string
-     */
-    protected $stateKey;
-
-    /**
-     * @return string
-     */
-    protected function getStateKey()
-    {
-        return $this->stateKey;
-    }
-
-    /**
-     * @param string $stateKey
-     *
-     * @return void
-     */
-    protected function setStateKey($stateKey)
-    {
-        $this->stateKey = $stateKey;
-    }
 
     /**
      * @return string
@@ -86,7 +59,6 @@ abstract class AbstractProvider extends AbstractBaseProvider
 
         if (!$this->getBoolOption('stateless', false)) {
             $urlParameters['state'] = $this->generateState();
-            $this->setStateKey(self::STATE_KEY . $urlParameters['state']);
             $this->session->set(
                 $this->getStateKey(),
                 $urlParameters['state']
@@ -189,7 +161,6 @@ abstract class AbstractProvider extends AbstractBaseProvider
             if (!isset($parameters['state'])) {
                 throw new UnknownState();
             }
-            $this->setStateKey(self::STATE_KEY . $parameters['state']);
             $state = $this->session->get($this->getStateKey());
             if (!$state) {
                 throw new UnknownAuthorization();

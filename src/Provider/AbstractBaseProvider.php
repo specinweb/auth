@@ -19,6 +19,8 @@ use SocialConnect\Provider\Session\SessionInterface;
 
 abstract class AbstractBaseProvider
 {
+    const STATE_KEY = 'oauth2_state:';
+
     /**
      * @var Consumer
      */
@@ -49,10 +51,37 @@ abstract class AbstractBaseProvider
      */
     protected $options = [];
 
+
+    /**
+     * Save stateKey
+     *
+     * @var string
+     */
+    protected $stateKey;
+
+    /**
+     * @return string
+     */
+    protected function getStateKey()
+    {
+        return $this->stateKey;
+    }
+
+    /**
+     * @param string $stateKey
+     *
+     * @return void
+     */
+    protected function setStateKey($stateKey)
+    {
+        $this->stateKey = $stateKey;
+    }
+
     /**
      * @param HttpStack $httpStack
      * @param SessionInterface $session
      * @param array $parameters
+     *
      * @throws InvalidProviderConfiguration
      */
     public function __construct(HttpStack $httpStack, SessionInterface $session, array $parameters)
@@ -69,6 +98,10 @@ abstract class AbstractBaseProvider
             $this->options = $parameters['options'];
         }
 
+        if (isset($parameters['state'])) {
+            $this->setStateKey(self::STATE_KEY . $parameters['state']);
+        }
+
         $this->consumer = $this->createConsumer($parameters);
         $this->httpStack = $httpStack;
         $this->session = $session;
@@ -76,6 +109,7 @@ abstract class AbstractBaseProvider
 
     /**
      * @param int $bytes Default it's 16 bytes / 128 bit / 16 symbols / 32 symbols in hex
+     *
      * @return string
      * @throws \Exception
      */
@@ -86,6 +120,7 @@ abstract class AbstractBaseProvider
 
     /**
      * @param array $parameters
+     *
      * @return Consumer
      * @throws InvalidProviderConfiguration
      */
@@ -100,6 +135,7 @@ abstract class AbstractBaseProvider
     /**
      * @param string $key
      * @param array $parameters
+     *
      * @return string
      * @throws InvalidProviderConfiguration
      */
@@ -123,12 +159,13 @@ abstract class AbstractBaseProvider
     /**
      * @param string $key
      * @param bool $default
+     *
      * @return bool
      */
     public function getBoolOption($key, $default): bool
     {
         if (array_key_exists($key, $this->options)) {
-            return (bool) $this->options[$key];
+            return (bool)$this->options[$key];
         }
 
         return $default;
@@ -137,12 +174,13 @@ abstract class AbstractBaseProvider
     /**
      * @param string $key
      * @param array $default
+     *
      * @return array
      */
     public function getArrayOption($key, array $default = []): array
     {
         if (array_key_exists($key, $this->options)) {
-            return (array) $this->options[$key];
+            return (array)$this->options[$key];
         }
 
         return $default;
@@ -180,6 +218,7 @@ abstract class AbstractBaseProvider
 
     /**
      * @param array $requestParameters
+     *
      * @return \SocialConnect\Provider\AccessTokenInterface
      */
     abstract public function getAccessTokenByRequestParameters(array $requestParameters);
@@ -195,6 +234,7 @@ abstract class AbstractBaseProvider
      * and use this method to instance new token
      *
      * @param array $information
+     *
      * @return mixed
      */
     abstract public function createAccessToken(array $information);
@@ -203,6 +243,7 @@ abstract class AbstractBaseProvider
      * Get current user identity from social network by $accessToken
      *
      * @param AccessTokenInterface $accessToken
+     *
      * @return \SocialConnect\Common\Entity\User
      *
      * @throws \Psr\Http\Client\ClientExceptionInterface
@@ -212,6 +253,7 @@ abstract class AbstractBaseProvider
 
     /**
      * @param RequestInterface $request
+     *
      * @return ResponseInterface
      * @throws InvalidResponse
      * @throws \Psr\Http\Client\ClientExceptionInterface
@@ -233,6 +275,7 @@ abstract class AbstractBaseProvider
 
     /**
      * @param ResponseInterface $response
+     *
      * @return array
      * @throws InvalidResponse
      */
@@ -272,6 +315,7 @@ abstract class AbstractBaseProvider
      * @param AccessTokenInterface|null $accessToken
      * @param array|null $payload
      * @param array $headers
+     *
      * @return array
      */
     public function request(string $method, string $url, array $query, AccessTokenInterface $accessToken = null, array $payload = null, array $headers = [])
@@ -337,6 +381,7 @@ abstract class AbstractBaseProvider
      * @param array $query
      * @param array $headers
      * @param array|null $payload
+     *
      * @return RequestInterface
      */
     protected function createRequest(string $method, string $uri, array $query, array $headers, array $payload = null): RequestInterface
@@ -371,8 +416,7 @@ abstract class AbstractBaseProvider
 
                 $request = $request
                     ->withHeader('Content-Length', $contentLength)
-                    ->withHeader('Content-Type', 'application/x-www-form-urlencoded')
-                ;
+                    ->withHeader('Content-Type', 'application/x-www-form-urlencoded');
 
                 return $request->withBody(
                     $this->httpStack->createStream(
