@@ -82,8 +82,7 @@ class SmashCast extends \SocialConnect\OAuth2\AbstractProvider
 
         return $this->httpStack->createRequest($this->requestHttpMethod, $this->getRequestTokenUri())
             ->withHeader('Content-Type', 'application/x-www-form-urlencoded')
-            ->withBody($this->httpStack->createStream(http_build_query($parameters)))
-        ;
+            ->withBody($this->httpStack->createStream(http_build_query($parameters)));
     }
 
     /**
@@ -96,11 +95,12 @@ class SmashCast extends \SocialConnect\OAuth2\AbstractProvider
         }
 
         if (!$this->getBoolOption('stateless', false)) {
-            $state = $this->session->get('oauth2_state');
+            $this->setStateKey(self::STATE_KEY . $parameters['state']);
+            $state = $this->session->get($this->getStateKey());
             if (!$state) {
                 throw new UnknownAuthorization();
             }
-
+            $this->session->delete($this->getStateKey());
             if (!isset($parameters['state'])) {
                 throw new UnknownState();
             }
@@ -122,6 +122,7 @@ class SmashCast extends \SocialConnect\OAuth2\AbstractProvider
      * BTW: Yes, I known that it's unneeded round trip to the server
      *
      * @param AccessTokenInterface $accessToken
+     *
      * @return string
      * @throws InvalidResponse
      * @throws \Psr\Http\Client\ClientExceptionInterface
