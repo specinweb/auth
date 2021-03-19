@@ -64,8 +64,12 @@ final class ArrayHydrator
      * @param array $input
      * @return object
      */
-    public function hydrate($targetObject, array $input)
+    public function hydrate($targetObject, $input)
     {
+        if (!$input || !is_array($input)) {
+            $input = [];
+        }
+
         foreach ($this->map as $keyFrom => $keyToOrFn) {
             if (strpos($keyFrom, '.')) {
                 $this->referenceRecursiveHydration(
