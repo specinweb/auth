@@ -117,7 +117,7 @@ class Talent extends AbstractProvider
      */
     public function getIdentity(AccessTokenInterface $accessToken)
     {
-        $response = $this->request('GET', 'api/user', [], $accessToken, null, ['Authorization' => 'Bearer ' . $accessToken->getToken()]);
+        $response = $this->request('GET', 'api/users/me', [], $accessToken, null, ['Authorization' => 'Bearer ' . $accessToken->getToken()]);
 
         $hydrator = new ArrayHydrator([
             'id' => 'id',
@@ -170,14 +170,16 @@ class Talent extends AbstractProvider
         $urlParameters = $this->getAuthUrlParameters();
 
         if (!$this->getBoolOption('stateless', false)) {
+            $urlParameters['nonce'] = $this->generateState();
+            $this->setStateKey(self::STATE_KEY . $urlParameters['nonce']);
             $this->session->set(
-                'oauth2_state',
-                $urlParameters['nonce'] = $this->generateState()
+                $this->getStateKey(),
+                $urlParameters['nonce']
             );
         }
 
         if (count($this->scope) > 0) {
-            $urlParameters['nonce'] = $this->getScopeInline();
+            $urlParameters['scope'] = $this->getScopeInline();
         }
 
         return $this->getAuthorizeUri() . '?' . http_build_query($urlParameters);
@@ -198,10 +200,11 @@ class Talent extends AbstractProvider
 
     protected function makeAccessTokenRequest(string $code): RequestInterface
     {
-        $state = $this->session->get('oauth2_state');
+        $state = $this->session->get($this->getStateKey());
         if (!$state) {
             throw new UnknownAuthorization();
         }
+
         $parameters = [
             'client_id' => $this->consumer->getKey(),
             'client_secret' => $this->consumer->getSecret(),
