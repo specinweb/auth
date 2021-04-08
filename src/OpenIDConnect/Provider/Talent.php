@@ -3,7 +3,7 @@
  * SocialConnect project
  * @author Ivan Pralnikov <specinweb@gmail.com>
  */
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace SocialConnect\OpenIDConnect\Provider;
 
@@ -12,6 +12,7 @@ use SocialConnect\Common\ArrayHydrator;
 use SocialConnect\Common\Exception\InvalidArgumentException;
 use SocialConnect\JWX\DecodeOptions;
 use SocialConnect\JWX\JWT;
+use SocialConnect\OAuth2\Exception\InvalidState;
 use SocialConnect\OAuth2\Exception\Unauthorized;
 use SocialConnect\OAuth2\Exception\UnknownAuthorization;
 use SocialConnect\OpenIDConnect\AccessToken;
@@ -168,16 +169,14 @@ class Talent extends AbstractProvider
     public function makeAuthUrl(): string
     {
         $urlParameters = $this->getAuthUrlParameters();
-
         if (!$this->getBoolOption('stateless', false)) {
-            $urlParameters['nonce'] = $this->generateState();
-            $this->setStateKey(self::STATE_KEY . $urlParameters['nonce']);
+            $urlParameters['state'] = $this->generateState();
             $this->session->set(
                 $this->getStateKey(),
-                $urlParameters['nonce']
+                $urlParameters['state']
             );
         }
-
+        $urlParameters['nonce'] = $this->generateState();
         if (count($this->scope) > 0) {
             $urlParameters['scope'] = $this->getScopeInline();
         }
@@ -190,9 +189,16 @@ class Talent extends AbstractProvider
         if (isset($parameters['error']) && $parameters['error'] === 'access_denied') {
             throw new Unauthorized();
         }
-
         if (!isset($parameters['code'])) {
             throw new Unauthorized('Unknown code');
+        }
+        $state = $this->session->get($this->getStateKey());
+        if (!$state) {
+            throw new UnknownAuthorization();
+        }
+        $this->session->delete($this->getStateKey());
+        if ($state !== $parameters['state']) {
+            throw new InvalidState();
         }
 
         return $this->getAccessToken($parameters['code']);
@@ -200,16 +206,10 @@ class Talent extends AbstractProvider
 
     protected function makeAccessTokenRequest(string $code): RequestInterface
     {
-        $state = $this->session->get($this->getStateKey());
-        if (!$state) {
-            throw new UnknownAuthorization();
-        }
-
         $parameters = [
             'client_id' => $this->consumer->getKey(),
             'client_secret' => $this->consumer->getSecret(),
             'code' => $code,
-            'nonce' => $state,
             'grant_type' => 'authorization_code',
             'redirect_uri' => $this->getRedirectUrl(),
         ];
