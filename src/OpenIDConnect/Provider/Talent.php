@@ -186,8 +186,8 @@ class Talent extends AbstractProvider
 
     public function getAccessTokenByRequestParameters(array $parameters)
     {
-        if (isset($parameters['error']) && $parameters['error'] === 'access_denied') {
-            throw new Unauthorized();
+        if (isset($parameters['error'])) {
+            throw new Unauthorized($parameters['error']);
         }
         if (!isset($parameters['code'])) {
             throw new Unauthorized('Unknown code');
