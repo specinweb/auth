@@ -150,7 +150,8 @@ abstract class AbstractProvider extends AbstractBaseProvider
     public function getAccessTokenByRequestParameters(array $parameters)
     {
         if (isset($parameters['error'])) {
-            throw new Unauthorized($parameters['error']);
+            $message = $parameters['error'] === 'access_denied' ? 'Unauthorized' : $parameters['error'];
+            throw new Unauthorized($message);
         }
 
         if (!isset($parameters['code'])) {

@@ -3,7 +3,7 @@
  * SocialConnect project
  * @author Ivan Pralnikov <specinweb@gmail.com>
  */
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace SocialConnect\OpenIDConnect\Provider;
 
@@ -187,7 +187,8 @@ class Talent extends AbstractProvider
     public function getAccessTokenByRequestParameters(array $parameters)
     {
         if (isset($parameters['error'])) {
-            throw new Unauthorized($parameters['error']);
+            $message = $parameters['error'] === 'access_denied' ? 'Unauthorized' : $parameters['error'];
+            throw new Unauthorized($message);
         }
         if (!isset($parameters['code'])) {
             throw new Unauthorized('Unknown code');
