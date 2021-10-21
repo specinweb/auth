@@ -10,6 +10,13 @@ class User extends \stdClass
 {
     const SEX_MALE = 'male';
     const SEX_FEMALE = 'female';
+    const SEX_OTHER = 'other';
+
+    const SEX_LIST = [
+        self::SEX_MALE,
+        self::SEX_FEMALE,
+        self::SEX_OTHER,
+    ];
 
     /**
      * @var string
@@ -92,10 +99,6 @@ class User extends \stdClass
      */
     public function setSex(string $sex): void
     {
-        if ($sex !== self::SEX_MALE && $sex !== self::SEX_FEMALE) {
-            throw new \InvalidArgumentException('Argument $sex is not valid');
-        }
-
-        $this->sex = $sex;
+        $this->sex = in_array($sex, self::SEX_LIST) ? $sex : self::SEX_OTHER;
     }
 }
