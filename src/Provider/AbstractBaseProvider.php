@@ -74,7 +74,7 @@ abstract class AbstractBaseProvider
      */
     protected function setStateKey($stateKey)
     {
-        $this->stateKey = $stateKey;
+        $this->stateKey = self::STATE_KEY . $stateKey;
     }
 
     /**
@@ -99,7 +99,7 @@ abstract class AbstractBaseProvider
         }
 
         if (isset($parameters['state'])) {
-            $this->setStateKey(self::STATE_KEY . $parameters['state']);
+            $this->setStateKey($parameters['state']);
         }
 
         $this->consumer = $this->createConsumer($parameters);
@@ -115,7 +115,10 @@ abstract class AbstractBaseProvider
      */
     protected function generateState(int $bytes = 16): string
     {
-        return bin2hex(random_bytes($bytes));
+        $stateKey = bin2hex(random_bytes($bytes));
+        $this->setStateKey($stateKey);
+
+        return $stateKey;
     }
 
     /**

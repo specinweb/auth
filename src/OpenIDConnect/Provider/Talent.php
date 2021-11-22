@@ -3,7 +3,7 @@
  * SocialConnect project
  * @author Ivan Pralnikov <specinweb@gmail.com>
  */
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace SocialConnect\OpenIDConnect\Provider;
 
@@ -15,6 +15,7 @@ use SocialConnect\JWX\JWT;
 use SocialConnect\OAuth2\Exception\InvalidState;
 use SocialConnect\OAuth2\Exception\Unauthorized;
 use SocialConnect\OAuth2\Exception\UnknownAuthorization;
+use SocialConnect\OAuth2\Exception\UnknownState;
 use SocialConnect\OpenIDConnect\AccessToken;
 use SocialConnect\Provider\AccessTokenInterface;
 use SocialConnect\OpenIDConnect\AbstractProvider;
@@ -193,13 +194,19 @@ class Talent extends AbstractProvider
         if (!isset($parameters['code'])) {
             throw new Unauthorized('Unknown code');
         }
-        $state = $this->session->get($this->getStateKey());
-        if (!$state) {
-            throw new UnknownAuthorization();
-        }
-        $this->session->delete($this->getStateKey());
-        if ($state !== $parameters['state']) {
-            throw new InvalidState();
+        if (!$this->getBoolOption('stateless', false)) {
+            if (!isset($parameters['state'])) {
+                throw new UnknownState();
+            }
+            $this->setStateKey($parameters['state']);
+            $state = $this->session->get($this->getStateKey());
+            if (!$state) {
+                throw new UnknownAuthorization();
+            }
+            $this->session->delete($this->getStateKey());
+            if ($state !== $parameters['state']) {
+                throw new InvalidState();
+            }
         }
 
         return $this->getAccessToken($parameters['code']);

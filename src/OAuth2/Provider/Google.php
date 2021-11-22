@@ -65,7 +65,6 @@ class Google extends AbstractProvider
             'family_name',
             'picture',
             'locale',
-            //
             'gender',
             'hd',
             'link',

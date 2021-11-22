@@ -162,6 +162,7 @@ abstract class AbstractProvider extends AbstractBaseProvider
             if (!isset($parameters['state'])) {
                 throw new UnknownState();
             }
+            $this->setStateKey($parameters['state']);
             $state = $this->session->get($this->getStateKey());
             if (!$state) {
                 throw new UnknownAuthorization();

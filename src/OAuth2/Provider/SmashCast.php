@@ -95,7 +95,7 @@ class SmashCast extends \SocialConnect\OAuth2\AbstractProvider
         }
 
         if (!$this->getBoolOption('stateless', false)) {
-            $this->setStateKey(self::STATE_KEY . $parameters['state']);
+            $this->setStateKey($parameters['state']);
             $state = $this->session->get($this->getStateKey());
             if (!$state) {
                 throw new UnknownAuthorization();
