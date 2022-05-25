@@ -72,7 +72,7 @@ class Telegram extends AbstractProvider
     function checkAuth(array $authData): array
     {
         $checkHash = $authData['hash'] ?? '';
-        unset($authData['hash']);
+        unset($authData['hash'], $authData['socialName']);
         $dataCheckArr = [];
         foreach ($authData as $key => $value) {
             $dataCheckArr[] = $key . '=' . $value;
