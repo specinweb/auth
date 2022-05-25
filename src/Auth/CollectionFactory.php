@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace SocialConnect\Auth;
 
 use LogicException;
+use SocialConnect\Auth;
 use SocialConnect\OAuth1;
 use SocialConnect\OAuth2;
 use SocialConnect\OpenID;
@@ -19,6 +20,8 @@ class CollectionFactory implements FactoryInterface
      * @var array
      */
     protected $providers = [
+        // Auth
+        Auth\Provider\Telegram::NAME       => Auth\Provider\Telegram::class,
         // OAuth1
         OAuth1\Provider\Twitter::NAME       => OAuth1\Provider\Twitter::class,
         OAuth1\Provider\Px500::NAME         => OAuth1\Provider\Px500::class,
