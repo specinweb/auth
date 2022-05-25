@@ -1,9 +1,12 @@
 <?php
-declare(strict_types=1);
+declare(strict_types = 1);
 
 /**
  * SocialConnect project
+ * Авторизация в телеграм с помощью виджета javascript
+ * Обрабатывает данные возвращаемые ботом в RedirectUrl
  */
+
 namespace SocialConnect\Auth\Provider;
 
 use Exception;
@@ -66,25 +69,26 @@ class Telegram extends AbstractProvider
     /**
      * Проверка авторизации
      */
-    function checkAuth(array $auth_data): array
+    function checkAuth(array $authData): array
     {
-        $check_hash = $auth_data['hash'] ?? '';
-        unset($auth_data['hash']);
-        $data_check_arr = [];
-        foreach ($auth_data as $key => $value) {
-            $data_check_arr[] = $key . '=' . $value;
+        $checkHash = $authData['hash'] ?? '';
+        unset($authData['hash']);
+        $dataCheckArr = [];
+        foreach ($authData as $key => $value) {
+            $dataCheckArr[] = $key . '=' . $value;
         }
-        sort($data_check_arr);
-        $data_check_string = implode("\n", $data_check_arr);
-        $secret_key = hash('sha256', getenv('TELEGRAM_BOT_TOKEN'), true);
-        $hash = hash_hmac('sha256', $data_check_string, $secret_key);
-        if (strcmp($hash, $check_hash) !== 0) {
+        sort($dataCheckArr);
+        $dataCheckString = implode("\n", $dataCheckArr);
+        $applicationId = $this->consumer->getKey();
+        $secretKey = hash('sha256', $applicationId, true);
+        $hash = hash_hmac('sha256', $dataCheckString, $secretKey);
+        if (strcmp($hash, $checkHash) !== 0) {
             throw new Unauthorized('Data is NOT from Telegram');
         }
-        if ((time() - $auth_data['auth_date']) > 86400) {
+        if (!isset($authData['auth_date']) || ((time() - $authData['auth_date']) > 86400)) {
             throw new Unauthorized('Data is outdated');
         }
 
-        return $auth_data;
+        return $authData;
     }
 }
