@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 /**
  * SocialConnect project
@@ -19,14 +19,18 @@ class Telegram extends AbstractProvider
 {
     const NAME = 'telegram';
 
+    private $allowedKeys = [
+        'id',
+        'first_name',
+        'last_name',
+        'username',
+        'photo_url',
+        'auth_date',
+    ];
+
     public function getName(): string
     {
         return self::NAME;
-    }
-
-    public function getAuthorizeUri(): string
-    {
-        return 'https://telegram.org';
     }
 
     public function getIdentity(array $data): object
@@ -47,23 +51,12 @@ class Telegram extends AbstractProvider
     /**
      * @throws Exception
      */
-    public function makeAuthUrl(): string
+    public function makeState(): string
     {
-        $urlParameters = $this->getAuthUrlParameters();
-        if (!$this->getBoolOption('stateless', false)) {
-            $urlParameters['state'] = $this->generateState();
-            $this->session->set(
-                $this->getStateKey(),
-                $urlParameters['state']
-            );
-        }
+        $state = $this->generateState();
+        $this->session->set($this->getStateKey(), $state);
 
-        return $this->getAuthorizeUri() . '?' . http_build_query($urlParameters);
-    }
-
-    public function getRedirectUrl(): string
-    {
-        return str_replace('${provider}', $this->getName(), $this->redirectUri);
+        return $state;
     }
 
     /**
@@ -72,7 +65,7 @@ class Telegram extends AbstractProvider
     function checkAuth(array $authData): array
     {
         $checkHash = $authData['hash'] ?? '';
-        unset($authData['hash'], $authData['socialName']);
+        $authData = array_intersect_key($authData, array_flip($this->allowedKeys));
         $dataCheckArr = [];
         foreach ($authData as $key => $value) {
             $dataCheckArr[] = $key . '=' . $value;

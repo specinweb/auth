@@ -45,24 +45,6 @@ abstract class AbstractProvider
     protected $stateKey;
 
     /**
-     * @return string
-     */
-    protected function getStateKey(): string
-    {
-        return $this->stateKey;
-    }
-
-    /**
-     * @param string $stateKey
-     *
-     * @return void
-     */
-    protected function setStateKey(string $stateKey)
-    {
-        $this->stateKey = self::STATE_KEY . $stateKey;
-    }
-
-    /**
      * @param HttpStack $httpStack
      * @param SessionInterface $session
      * @param array $parameters
@@ -89,6 +71,24 @@ abstract class AbstractProvider
     }
 
     /**
+     * @return string
+     */
+    protected function getStateKey(): string
+    {
+        return $this->stateKey;
+    }
+
+    /**
+     * @param string $stateKey
+     *
+     * @return void
+     */
+    protected function setStateKey(string $stateKey)
+    {
+        $this->stateKey = self::STATE_KEY . $stateKey;
+    }
+
+    /**
      * Return Provider's name
      *
      * @return string
@@ -98,7 +98,7 @@ abstract class AbstractProvider
     /**
      * @return string
      */
-    abstract public function makeAuthUrl(): string;
+    abstract public function makeState(): string;
 
     /**
      * @param array $parameters
@@ -113,21 +113,6 @@ abstract class AbstractProvider
     }
 
     /**
-     * @param string $key
-     * @param bool $default
-     *
-     * @return bool
-     */
-    public function getBoolOption($key, $default): bool
-    {
-        if (array_key_exists($key, $this->options)) {
-            return (bool)$this->options[$key];
-        }
-
-        return $default;
-    }
-
-    /**
      * @param int $bytes Default it's 16 bytes / 128 bit / 16 symbols / 32 symbols in hex
      *
      * @return string
@@ -139,14 +124,6 @@ abstract class AbstractProvider
         $this->setStateKey($stateKey);
 
         return $stateKey;
-    }
-
-    public function getAuthUrlParameters(): array
-    {
-        $parameters['client_id'] = $this->consumer->getKey();
-        $parameters['redirect_uri'] = $this->getRedirectUrl();
-
-        return $parameters;
     }
 
     /**
