@@ -10,8 +10,6 @@ use SocialConnect\Provider\Session\SessionInterface;
 
 abstract class AbstractProvider
 {
-    const STATE_KEY = 'auth_state:';
-
     /**
      * @var Consumer
      */
@@ -38,13 +36,6 @@ abstract class AbstractProvider
     protected $options = [];
 
     /**
-     * Save stateKey
-     *
-     * @var string
-     */
-    protected $stateKey;
-
-    /**
      * @param HttpStack $httpStack
      * @param SessionInterface $session
      * @param array $parameters
@@ -61,31 +52,9 @@ abstract class AbstractProvider
             $this->redirectUri = $parameters['redirectUri'];
         }
 
-        if (isset($parameters['state'])) {
-            $this->setStateKey($parameters['state']);
-        }
-
         $this->consumer = $this->createConsumer($parameters);
         $this->httpStack = $httpStack;
         $this->session = $session;
-    }
-
-    /**
-     * @return string
-     */
-    protected function getStateKey(): string
-    {
-        return $this->stateKey;
-    }
-
-    /**
-     * @param string $stateKey
-     *
-     * @return void
-     */
-    protected function setStateKey(string $stateKey)
-    {
-        $this->stateKey = self::STATE_KEY . $stateKey;
     }
 
     /**
@@ -98,7 +67,7 @@ abstract class AbstractProvider
     /**
      * @return string
      */
-    abstract public function makeState(): string;
+    abstract public function getState(): string;
 
     /**
      * @param array $parameters

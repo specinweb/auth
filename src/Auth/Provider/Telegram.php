@@ -51,12 +51,9 @@ class Telegram extends AbstractProvider
     /**
      * @throws Exception
      */
-    public function makeState(): string
+    public function getState(): string
     {
-        $state = $this->generateState();
-        $this->session->set($this->getStateKey(), $state);
-
-        return $state;
+        return $this->generateState();
     }
 
     /**
