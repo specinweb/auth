@@ -89,10 +89,7 @@ abstract class AbstractProvider
      */
     protected function generateState(int $bytes = 16): string
     {
-        $stateKey = bin2hex(random_bytes($bytes));
-        $this->setStateKey($stateKey);
-
-        return $stateKey;
+        return bin2hex(random_bytes($bytes));
     }
 
     /**
