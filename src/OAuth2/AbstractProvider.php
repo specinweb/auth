@@ -112,10 +112,10 @@ abstract class AbstractProvider extends AbstractBaseProvider
             'grant_type' => 'authorization_code',
             'redirect_uri' => $this->getRedirectUrl(),
         ];
+        $uri = $this->getRequestTokenUri() . '?' . http_build_query($parameters, '', '&');
 
-        return $this->httpStack->createRequest($this->requestHttpMethod, $this->getRequestTokenUri())
-            ->withHeader('Content-Type', 'application/x-www-form-urlencoded')
-            ->withBody($this->httpStack->createStream(http_build_query($parameters, '', '&')));
+        return $this->httpStack->createRequest($this->requestHttpMethod, $uri)
+            ->withHeader('Content-Type', 'application/x-www-form-urlencoded');
     }
 
     /**
