@@ -33,9 +33,9 @@
     "require": {
         "php": ">=7.1",
         "ext-json": "*",
-        "psr/http-client": "^1.0",
-        "psr/simple-cache": "^1.0",
-        "psr/http-factory": "^1.0",
+        "psr/http-client": "^1.0 || ^2.0",
+        "psr/simple-cache": "^1.0 || ^2.0",
+        "psr/http-factory": "^1.0 || ^2.0",
         "socialconnect/jwx": "^1.0"
     },
     "require-dev": {
@@ -53,5 +53,13 @@
         "psr-4" : {
             "Test\\" : "tests/Test/"
         }
+    },
+    "replace": {
+        "socialconnect/common": "self.version",
+        "socialconnect/oauth1": "self.version",
+        "socialconnect/oauth2": "self.version",
+        "socialconnect/openid": "self.version",
+        "socialconnect/openid-connect": "self.version",
+        "socialconnect/provider": "self.version"
     }
 }
