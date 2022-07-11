@@ -3,13 +3,15 @@
  * SocialConnect project
  * @author: Patsura Dmitry https://github.com/ovr <talk@dmtry.me>
  */
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace SocialConnect\OAuth2\Provider;
 
+use Psr\Http\Message\ResponseInterface;
 use SocialConnect\Common\ArrayHydrator;
 use SocialConnect\Provider\AccessTokenInterface;
 use SocialConnect\Common\Entity\User;
+use SocialConnect\Provider\Exception\InvalidResponse;
 
 class Vk extends \SocialConnect\OAuth2\AbstractProvider
 {
@@ -58,12 +60,31 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
     }
 
     /**
+     * @param ResponseInterface $response
+     *
+     * @return array
+     * @throws InvalidResponse
+     */
+    protected function hydrateResponse(ResponseInterface $response): array
+    {
+        $result = json_decode($response->getBody()->getContents(), true);
+        if (!$result || !isset($result['response']) || !is_array($result['response'])) {
+            throw new InvalidResponse(
+                'API response is not a valid JSON object',
+                $response
+            );
+        }
+
+        return $result;
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function getIdentity(AccessTokenInterface $accessToken)
     {
         $query = [
-            'v' => '5.100'
+            'v' => '5.100',
         ];
 
         $fields = $this->getArrayOption('identity.fields', []);
@@ -93,7 +114,7 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
         ]);
 
         /** @var User $user */
-        $user = $hydrator->hydrate(new User(), $response['response'][0]);
+        $user = $hydrator->hydrate(new User(), array_shift($response['response']));
 
         $user->email = $this->email ?: $accessToken->getEmail();
         $user->emailVerified = true;
