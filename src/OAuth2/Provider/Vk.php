@@ -110,7 +110,25 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
                 $user->setSex($value === 1 ? User::SEX_FEMALE : User::SEX_MALE);
             },
             'screen_name' => 'username',
+            'nickname' => 'nickname',
+            'city' => 'city',
+            'country' => 'country',
             'photo_max_orig' => 'pictureURL',
+            'photo_200_orig' => 'photo200Orgig',
+            'photo_400_orig' => 'photo400Orgig',
+            'personal' => 'personal',
+            'photo_max' => 'photoMax',
+            'followers_count' => 'followersCount',
+            'friend_status' => 'friendStatus',
+            'has_mobile' => 'hasMobile',
+            'home_town' => 'homeTown',
+            'activities' => 'activities',
+            'domain' => 'domain',
+            'has_photo' => 'hasPhoto',
+            'site' => 'site',
+            'last_seen' => 'lastSeen',
+            'timezone' => 'timezone',
+            'universities' => 'universities',
         ]);
 
         /** @var User $user */
