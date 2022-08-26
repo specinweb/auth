@@ -15,9 +15,7 @@ class City extends \stdClass
     public $title;
 
     /**
-     * Should be female or male
-     *
      * @var string|null
      */
-    protected $region;
+    public $region;
 }
