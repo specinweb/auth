@@ -142,7 +142,7 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
 
     public function getCities(AccessTokenInterface $accessToken, int $countryId, string $q): array
     {
-        $cities = [];
+        $cities = null;
         $query = [
             'v' => '5.100',
             'country_id' => $countryId,
@@ -161,6 +161,6 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
             }
         }
 
-        return !$cities ?: array_combine(array_column($cities, 'id'), $cities);
+        return $cities ? array_combine(array_column($cities, 'id'), $cities) : [];
     }
 }
