@@ -433,4 +433,9 @@ abstract class AbstractBaseProvider
 
         return $request;
     }
+
+    public function getCities(AccessTokenInterface $accessToken, int $countryId, string $q): array
+    {
+        return [];
+    }
 }

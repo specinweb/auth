@@ -3,7 +3,7 @@
  * SocialConnect project
  * @author: Patsura Dmitry https://github.com/ovr <talk@dmtry.me>
  */
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace SocialConnect\OAuth2\Provider;
 
@@ -11,6 +11,7 @@ use Psr\Http\Message\ResponseInterface;
 use SocialConnect\Common\ArrayHydrator;
 use SocialConnect\Provider\AccessTokenInterface;
 use SocialConnect\Common\Entity\User;
+use SocialConnect\Common\Entity\City;
 use SocialConnect\Provider\Exception\InvalidResponse;
 
 class Vk extends \SocialConnect\OAuth2\AbstractProvider
@@ -91,7 +92,6 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
         if ($fields) {
             $query['fields'] = implode(',', $fields);
         }
-
         $response = $this->request('GET', 'method/users.get', $query, $accessToken);
 
         $hydrator = new ArrayHydrator([
@@ -114,8 +114,8 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
             'city' => 'city',
             'country' => 'country',
             'photo_max_orig' => 'pictureURL',
-            'photo_200_orig' => 'photo200Orgig',
-            'photo_400_orig' => 'photo400Orgig',
+            'photo_200_orig' => 'photoOrig200',
+            'photo_400_orig' => 'photoOrig400',
             'personal' => 'personal',
             'photo_max' => 'photoMax',
             'followers_count' => 'followersCount',
@@ -138,5 +138,29 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
         $user->emailVerified = true;
 
         return $user;
+    }
+
+    public function getCities(AccessTokenInterface $accessToken, int $countryId, string $q): array
+    {
+        $cities = [];
+        $query = [
+            'v' => '5.100',
+            'country_id' => $countryId,
+            'q' => $q,
+        ];
+        $cityInfo = $this->request('GET', 'method/database.getCities', $query, $accessToken);
+        if (isset($cityInfo['response']) && is_array($cityInfo['response'])) {
+            foreach (array_pop($cityInfo['response']) as $item) {
+                $hydrator = new ArrayHydrator([
+                    'id' => 'id',
+                    'title' => 'title',
+                    'region' => 'region',
+                ]);
+                /** @var City $city */
+                $cities[] = $hydrator->hydrate(new City(), $item);
+            }
+        }
+
+        return !$cities ?: array_combine(array_column($cities, 'id'), $cities);
     }
 }
