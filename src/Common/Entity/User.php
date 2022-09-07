@@ -54,6 +54,21 @@ class User extends \stdClass
     public $username;
 
     /**
+     * @var string|null
+     */
+    public $nickname;
+
+    /**
+     * @var string|null
+     */
+    public $city;
+
+    /**
+     * @var string|null
+     */
+    public $country;
+
+    /**
      * Should be female or male
      *
      * @var string|null
@@ -68,7 +83,72 @@ class User extends \stdClass
     /**
      * @var string|null
      */
+    public $personal;
+
+    /**
+     * @var int|null
+     */
+    public $followersCount;
+
+    /**
+     * @var string|null
+     */
+    public $friendStatus;
+
+    /**
+     * @var int|null
+     */
+    public $hasMobile;
+
+    /**
+     * @var int|null
+     */
+    public $hasPhoto;
+
+    /**
+     * @var string|null
+     */
+    public $homeTown;
+
+    /**
+     * @var string|null
+     */
+    public $domain;
+
+    /**
+     * @var string|null
+     */
+    public $site;
+
+    /**
+     * @var float|null
+     */
+    public $timezone;
+
+    /**
+     * @var array
+     */
+    public $lastSeen = [];
+
+    /**
+     * @var string|null
+     */
     public $pictureURL;
+
+    /**
+     * @var string|null
+     */
+    public $photoOrig200;
+
+    /**
+     * @var string|null
+     */
+    public $photoOrig400;
+
+    /**
+     * @var string|null
+     */
+    public $photoMax;
 
     /**
      * @return \DateTime|null
