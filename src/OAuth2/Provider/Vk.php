@@ -3,15 +3,17 @@
  * SocialConnect project
  * @author: Patsura Dmitry https://github.com/ovr <talk@dmtry.me>
  */
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace SocialConnect\OAuth2\Provider;
 
 use Psr\Http\Message\ResponseInterface;
 use SocialConnect\Common\ArrayHydrator;
+use SocialConnect\OAuth2\AccessToken;
 use SocialConnect\Provider\AccessTokenInterface;
 use SocialConnect\Common\Entity\User;
 use SocialConnect\Common\Entity\City;
+use SocialConnect\Provider\Exception\InvalidProviderConfiguration;
 use SocialConnect\Provider\Exception\InvalidResponse;
 
 class Vk extends \SocialConnect\OAuth2\AbstractProvider
@@ -77,6 +79,40 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
         }
 
         return $result;
+    }
+
+    public function exchangeSilentAuthToken(array $payload)
+    {
+        if (!isset($payload['silent_token'])) {
+            throw new InvalidProviderConfiguration(
+                "Parameter 'silent_token' doesn`t exists for get access token"
+            );
+        }
+        if (!isset($payload['uuid'])) {
+            throw new InvalidProviderConfiguration(
+                "Parameter 'uuid' doesn`t exists for get access token"
+            );
+        }
+        if (!isset($payload['service_key'])) {
+            throw new InvalidProviderConfiguration(
+                "Parameter 'service_key' doesn`t exists for get service token"
+            );
+        }
+        $query = [
+            'v' => '5.131',
+            'token' => $payload['silent_token'],
+            'uuid' => $payload['uuid'],
+            'access_token' => $payload['service_key'],
+        ];
+        $response = $this->request('POST', 'method/auth.exchangeSilentAuthToken', $query);
+        if (!isset($response['response']['access_token'])) {
+            throw new InvalidResponse(
+                'API response not contain access_token field',
+                $response
+            );
+        }
+
+        return new AccessToken(['access_token' => $response['response']['access_token']]);
     }
 
     /**
