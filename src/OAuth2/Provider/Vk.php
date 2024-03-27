@@ -135,6 +135,8 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
             'first_name' => 'firstname',
             'last_name' => 'lastname',
             'email' => 'email',
+            'has_mobile' => 'hasMobile',
+            'mobile_phone' => 'mobilePhone',
             'bdate' => static function ($value, User $user) {
                 if (strtotime($value)) {
                     $user->setBirthday(
@@ -156,7 +158,6 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
             'photo_max' => 'photoMax',
             'followers_count' => 'followersCount',
             'friend_status' => 'friendStatus',
-            'has_mobile' => 'hasMobile',
             'home_town' => 'homeTown',
             'activities' => 'activities',
             'domain' => 'domain',

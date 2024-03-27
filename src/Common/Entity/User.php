@@ -39,6 +39,11 @@ class User extends \stdClass
     public $email;
 
     /**
+     * @var string
+     */
+    public $mobilePhone;
+
+    /**
      * @var bool
      */
     public $emailVerified = false;
