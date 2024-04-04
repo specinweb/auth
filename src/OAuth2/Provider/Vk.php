@@ -141,13 +141,9 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
             'id' => 'id',
             'first_name' => 'firstname',
             'last_name' => 'lastname',
-            'email' => static function ($value, User $user) {
-                $user->email = $this->email ?: $value;
-            },
+            'email' => 'email',
             'has_mobile' => 'hasMobile',
-            'mobile_phone' => static function ($value, User $user) {
-                $user->mobilePhone = $this->phone ?: $value;
-            },
+            'mobile_phone' => 'mobilePhone',
             'bdate' => static function ($value, User $user) {
                 if (strtotime($value)) {
                     $user->setBirthday(
@@ -184,6 +180,10 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
 
         if (!$user->email) {
             $user->email = $this->email ?: $accessToken->getEmail();
+        }
+
+        if (!$user->mobilePhone) {
+            $user->mobilePhone = $this->phone;
         }
 
         $user->emailVerified = true;
