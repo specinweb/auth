@@ -143,7 +143,6 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
             'last_name' => 'lastname',
             'email' => 'email',
             'has_mobile' => 'hasMobile',
-            'mobile_phone' => 'mobilePhone',
             'bdate' => static function ($value, User $user) {
                 if (strtotime($value)) {
                     $user->setBirthday(
@@ -182,7 +181,7 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
             $user->email = $this->email ?: $accessToken->getEmail();
         }
 
-        if (!$user->mobilePhone) {
+        if ($this->phone) {
             $user->mobilePhone = $this->phone;
         }
 
