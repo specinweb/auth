@@ -36,6 +36,8 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
      */
     protected $email;
 
+    public $responseChangeToken;
+
     public function getBaseUri()
     {
         return 'https://api.vk.com/';
@@ -115,6 +117,8 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
                 $response
             );
         }
+
+        $this->responseChangeToken = $response;
 
         $this->phone = $response['response']['phone'] ?? null;
         $this->email = $response['response']['email'] ?? null;
