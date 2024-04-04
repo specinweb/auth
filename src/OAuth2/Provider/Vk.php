@@ -20,10 +20,14 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
 {
     const NAME = 'vk';
 
+    protected $version;
+
     /**
      * {@inheritdoc}
      */
     protected $requestHttpMethod = 'GET';
+
+    protected $phone;
 
     /**
      * Vk returns email inside AccessToken
@@ -99,7 +103,7 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
             );
         }
         $query = [
-            'v' => '5.131',
+            'v' => $this->version,
             'token' => $payload['silent_token'],
             'uuid' => $payload['uuid'],
             'access_token' => $payload['service_key'],
@@ -112,6 +116,9 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
             );
         }
 
+        $this->phone = $response['response']['phone'] ?? null;
+        $this->email = $response['response']['email'] ?? null;
+
         return new AccessToken(['access_token' => $response['response']['access_token']]);
     }
 
@@ -121,7 +128,7 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
     public function getIdentity(AccessTokenInterface $accessToken)
     {
         $query = [
-            'v' => '5.100',
+            'v' => $this->version,
         ];
 
         $fields = $this->getArrayOption('identity.fields', []);
@@ -134,9 +141,13 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
             'id' => 'id',
             'first_name' => 'firstname',
             'last_name' => 'lastname',
-            'email' => 'email',
+            'email' => static function ($value, User $user) {
+                $user->email = $this->email ?: $value;
+            },
             'has_mobile' => 'hasMobile',
-            'mobile_phone' => 'mobilePhone',
+            'mobile_phone' => static function ($value, User $user) {
+                $user->mobilePhone = $this->phone ?: $value;
+            },
             'bdate' => static function ($value, User $user) {
                 if (strtotime($value)) {
                     $user->setBirthday(
@@ -171,7 +182,10 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
         /** @var User $user */
         $user = $hydrator->hydrate(new User(), array_shift($response['response']));
 
-        $user->email = $this->email ?: $accessToken->getEmail();
+        if (!$user->email) {
+            $user->email = $this->email ?: $accessToken->getEmail();
+        }
+
         $user->emailVerified = true;
 
         return $user;
@@ -181,7 +195,7 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
     {
         $cities = null;
         $query = [
-            'v' => '5.100',
+            'v' => $this->version,
             'country_id' => $countryId,
             'q' => $q,
         ];
