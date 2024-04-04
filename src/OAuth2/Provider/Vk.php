@@ -20,7 +20,7 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
 {
     const NAME = 'vk';
 
-    protected $version;
+    protected $version = '5.199';
 
     /**
      * {@inheritdoc}
