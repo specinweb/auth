@@ -74,6 +74,11 @@ class User extends \stdClass
     public $country;
 
     /**
+     * @var bool
+     */
+    protected $trusted;
+
+    /**
      * Should be female or male
      *
      * @var string|null
@@ -156,6 +161,11 @@ class User extends \stdClass
     public $photoMax;
 
     /**
+     * @var array
+     */
+    public $contacts = [];
+
+    /**
      * @return \DateTime|null
      */
     public function getBirthday(): ?\DateTime
@@ -185,5 +195,21 @@ class User extends \stdClass
     public function setSex(string $sex): void
     {
         $this->sex = in_array($sex, self::SEX_LIST) ? $sex : self::SEX_OTHER;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getTrusted(): ?bool
+    {
+        return $this->trusted;
+    }
+
+    /**
+     * @param bool $trusted
+     */
+    public function setTrusted(?bool $trusted): void
+    {
+        $this->trusted = $trusted;
     }
 }
