@@ -146,7 +146,12 @@ class Mos extends AbstractProvider
             },
         ]);
 
-        return $hydrator->hydrate(new User(), $response);
+        /** @var User $user */
+        $user = $hydrator->hydrate(new User(), $response);
+
+        $user->hasMobile = (bool)$user->mobilePhone;
+
+        return $user;
     }
 
     /**
