@@ -127,8 +127,9 @@ class Mos extends AbstractProvider
             'guid' => 'id',
             'FirstName' => 'firstname',
             'LastName' => 'lastname',
+            'MiddleName' => 'middlename',
             'email' => 'email',
-            'mobile' => 'mobilePhone',
+            'phone_number' => 'mobilePhone',
             'contacts' => 'contacts',
             'trusted' => static function ($value, User $user) {
                 $user->setTrusted($value);

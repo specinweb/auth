@@ -36,6 +36,11 @@ class User extends \stdClass
     /**
      * @var string
      */
+    public $middlename;
+
+    /**
+     * @var string
+     */
     public $email;
 
     /**
