@@ -30,7 +30,7 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
     protected $phone;
 
     /**
-     * Vk returns email inside AccessToken
+     * Vk возвращает email внутри AccessToken
      *
      * @var string|null
      */
