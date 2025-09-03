@@ -40,17 +40,17 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
 
     public function getBaseUri()
     {
-        return 'https://api.vk.com/';
+        return 'https://api.vk.ru/';
     }
 
     public function getAuthorizeUri()
     {
-        return 'https://oauth.vk.com/authorize';
+        return 'https://oauth.vk.ru/authorize';
     }
 
     public function getRequestTokenUri()
     {
-        return 'https://oauth.vk.com/access_token';
+        return 'https://oauth.vk.ru/access_token';
     }
 
     public function getName()
