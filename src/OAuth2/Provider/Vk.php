@@ -77,14 +77,154 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
     protected function hydrateResponse(ResponseInterface $response): array
     {
         $result = json_decode($response->getBody()->getContents(), true);
-        if (!$result || !isset($result['response']) || !is_array($result['response'])) {
+
+        if (!$result) {
             throw new InvalidResponse(
                 'API response is not a valid JSON object',
                 $response
             );
         }
 
+        if (!isset($result['response']) || !is_array($result['response'])) {
+            return ['response' => $result];
+        }
+
         return $result;
+    }
+
+    /**
+     * Сформировать URL авторизации с использованием PKCE
+     * Добавляет параметры code_challenge и code_challenge_method
+     *
+     * @param string $codeChallenge
+     * @param string $method По умолчанию S256
+     *
+     * @return string
+     */
+    public function makeAuthUrlWithPkce(string $codeChallenge, string $method = 'S256'): string
+    {
+        $parameters = $this->getAuthUrlParameters();
+
+        if (!$this->getBoolOption('stateless', false)) {
+            $parameters['state'] = $this->generateState();
+            $this->session->set(
+                $this->getStateKey(),
+                $parameters['state']
+            );
+        }
+
+        if (count($this->scope) > 0) {
+            $parameters['scope'] = $this->getScopeInline();
+        }
+
+        $parameters['code_challenge'] = $codeChallenge;
+        $parameters['code_challenge_method'] = $method;
+
+        return $this->getAuthorizeUri() . '?' . http_build_query($parameters);
+    }
+
+    /**
+     * Обменять auth_code на Access Token с использованием PKCE (code_verifier)
+     *
+     * @param string $code
+     * @param string $codeVerifier
+     * @param bool $useClientSecret По умолчанию true, можно отключить для public клиентов
+     *
+     * @return AccessToken
+     * @throws InvalidResponse
+     * @throws \Psr\Http\Client\ClientExceptionInterface
+     */
+    public function getAccessTokenWithPkce(string $code, string $codeVerifier, bool $useClientSecret = true): AccessToken
+    {
+        $parameters = [
+            'client_id' => $this->consumer->getKey(),
+            'code' => $code,
+            'grant_type' => 'authorization_code',
+            'redirect_uri' => $this->getRedirectUrl(),
+            'code_verifier' => $codeVerifier,
+        ];
+
+        if ($useClientSecret) {
+            $parameters['client_secret'] = $this->consumer->getSecret();
+        }
+
+        $request = $this->httpStack->createRequest('POST', $this->getRequestTokenUri())
+            ->withHeader('Content-Type', 'application/x-www-form-urlencoded')
+            ->withBody($this->httpStack->createStream(http_build_query($parameters, '', '&')));
+
+        $response = $this->executeRequest($request);
+
+        return $this->parseToken($response->getBody()->getContents());
+    }
+
+    /**
+     * Обновить Access Token через Refresh Token
+     *
+     * @param string $refreshToken
+     * @param bool $useClientSecret По умолчанию true
+     *
+     * @return AccessToken
+     * @throws InvalidResponse
+     * @throws \Psr\Http\Client\ClientExceptionInterface
+     */
+    public function refreshAccessToken(string $refreshToken, bool $useClientSecret = true): AccessToken
+    {
+        $parameters = [
+            'client_id' => $this->consumer->getKey(),
+            'grant_type' => 'refresh_token',
+            'refresh_token' => $refreshToken,
+        ];
+
+        if ($useClientSecret) {
+            $parameters['client_secret'] = $this->consumer->getSecret();
+        }
+
+        $request = $this->httpStack->createRequest('POST', $this->getRequestTokenUri())
+            ->withHeader('Content-Type', 'application/x-www-form-urlencoded')
+            ->withBody($this->httpStack->createStream(http_build_query($parameters, '', '&')));
+
+        $response = $this->executeRequest($request);
+
+        return $this->parseToken($response->getBody()->getContents());
+    }
+
+    /**
+     * Запрос userLinking.b2bGet для миграции с внешних OAuth (OK/Mail) на VK ID
+     * Требует сервисный токен в заголовке Authorization: Bearer <SERVICE_TOKEN>
+     *
+     * @param string $serviceToken
+     * @param string $userAccessToken
+     * @param string $apiVersion По умолчанию 5.243
+     *
+     * @return array
+     * @throws InvalidResponse
+     * @throws \Psr\Http\Client\ClientExceptionInterface
+     */
+    public function getUserLinkingB2B(string $serviceToken, string $userAccessToken, string $apiVersion = '5.243'): array
+    {
+        $headers = [
+            'Authorization' => 'Bearer ' . $serviceToken,
+            'Content-Type' => 'application/x-www-form-urlencoded; charset=utf-8',
+            'accept' => '*/*',
+        ];
+
+        $payload = [
+            'v' => $apiVersion,
+            'user_access_token' => $userAccessToken,
+        ];
+
+        $response = $this->request(
+            'POST',
+            'method/userLinking.b2bGet',
+            [],
+            null,
+            $payload,
+            $headers
+        );
+
+        $this->responseChangeToken = $response;
+
+        return $response;
     }
 
     public function exchangeSilentAuthToken(array $payload)
