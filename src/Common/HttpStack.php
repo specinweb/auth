@@ -57,7 +57,7 @@ class HttpStack implements RequestFactoryInterface, ClientInterface, StreamFacto
      */
     public function send(RequestInterface $request): ResponseInterface
     {
-        return $this->client->send($request);
+        return $this->client->sendRequest($request);
     }
 
     /**
