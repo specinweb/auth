@@ -267,55 +267,59 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
      */
     public function getIdentity(AccessTokenInterface $accessToken)
     {
-        $query = [
-            'v' => $this->version,
+        $headers = [
+            'Content-Type' => 'application/x-www-form-urlencoded',
         ];
 
-        $fields = $this->getArrayOption('identity.fields', []);
-        if ($fields) {
-            $query['fields'] = implode(',', $fields);
+        $payload = [
+            'client_id' => $this->consumer->getKey(),
+            'access_token' => $accessToken->getToken(),
+        ];
+
+        $response = $this->request(
+            'POST',
+            'oauth2/user_info',
+            [],
+            null,
+            $payload,
+            $headers
+        );
+
+        $data = isset($response['response']) ? $response['response'] : $response;
+        $userData = $data['user'] ?? null;
+
+        if (!is_array($userData)) {
+            throw new InvalidResponse('API response does not contain user object');
         }
-        $response = $this->request('GET', 'method/users.get', $query, $accessToken);
 
         $hydrator = new ArrayHydrator([
-            'id' => 'id',
+            'user_id' => 'id',
             'first_name' => 'firstname',
             'last_name' => 'lastname',
             'email' => 'email',
-            'has_mobile' => 'hasMobile',
-            'bdate' => static function ($value, User $user) {
-                if (strtotime($value)) {
-                    $user->setBirthday(
-                        new \DateTime($value)
-                    );
+            'avatar' => 'pictureURL',
+            'birthday' => static function ($value, User $user) {
+                if ($value && strtotime($value)) {
+                    $user->setBirthday(new \DateTime($value));
                 }
             },
             'sex' => static function ($value, User $user) {
-                $user->setSex($value === 1 ? User::SEX_FEMALE : User::SEX_MALE);
+                // 1 — женский, 2 — мужской, 0 — не указан
+                if ($value === 1) {
+                    $user->setSex(User::SEX_FEMALE);
+                } elseif ($value === 2) {
+                    $user->setSex(User::SEX_MALE);
+                } else {
+                    $user->setSex(User::SEX_OTHER);
+                }
             },
-            'screen_name' => 'username',
-            'nickname' => 'nickname',
-            'city' => 'city',
-            'country' => 'country',
-            'photo_max_orig' => 'pictureURL',
-            'photo_200_orig' => 'photoOrig200',
-            'photo_400_orig' => 'photoOrig400',
-            'personal' => 'personal',
-            'photo_max' => 'photoMax',
-            'followers_count' => 'followersCount',
-            'friend_status' => 'friendStatus',
-            'home_town' => 'homeTown',
-            'activities' => 'activities',
-            'domain' => 'domain',
-            'has_photo' => 'hasPhoto',
-            'site' => 'site',
-            'last_seen' => 'lastSeen',
-            'timezone' => 'timezone',
-            'universities' => 'universities',
+            'verified' => static function ($value, User $user) {
+                $user->setTrusted((bool)$value);
+            },
         ]);
 
         /** @var User $user */
-        $user = $hydrator->hydrate(new User(), array_shift($response['response']));
+        $user = $hydrator->hydrate(new User(), $userData);
 
         if (!$user->email) {
             $user->email = $this->email ?: $accessToken->getEmail();
@@ -325,7 +329,7 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
             $user->mobilePhone = $this->phone;
         }
 
-        $user->emailVerified = true;
+        $user->emailVerified = (bool)$user->email;
 
         return $user;
     }
