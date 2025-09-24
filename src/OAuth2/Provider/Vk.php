@@ -77,7 +77,6 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
     protected function hydrateResponse(ResponseInterface $response): array
     {
         $result = json_decode($response->getBody()->getContents(), true);
-
         if (!$result) {
             throw new InvalidResponse(
                 'API response is not a valid JSON object',
@@ -85,6 +84,8 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
             );
         }
 
+        // VK method/userLinking.b2bGet возвращает данные без поля 'response'
+        // Для унификации с остальными методами оборачиваем в ['response' => $result]
         if (!isset($result['response']) || !is_array($result['response'])) {
             return ['response' => $result];
         }
@@ -134,13 +135,13 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
      * @throws InvalidResponse
      * @throws \Psr\Http\Client\ClientExceptionInterface
      */
-    public function getAccessTokenWithPkce(string $code, string $codeVerifier, bool $useClientSecret = true): AccessToken
+    public function getAccessTokenWithPkce(string $code, string $codeVerifier, bool $useClientSecret = true, ?string $redirectUri = null): AccessToken
     {
         $parameters = [
             'client_id' => $this->consumer->getKey(),
             'code' => $code,
             'grant_type' => 'authorization_code',
-            'redirect_uri' => $this->getRedirectUrl(),
+            'redirect_uri' => $redirectUri ?? $this->getRedirectUrl(),
             'code_verifier' => $codeVerifier,
         ];
 
@@ -222,6 +223,7 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
             $headers
         );
 
+        // Сохраним как и в exchangeSilentAuthToken
         $this->responseChangeToken = $response;
 
         return $response;
