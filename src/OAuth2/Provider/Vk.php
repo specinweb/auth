@@ -267,6 +267,8 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
      */
     public function getIdentity(AccessTokenInterface $accessToken)
     {
+        // VK ID: POST oauth2/user_info (x-www-form-urlencoded), token нельзя передавать в заголовке Authorization для Web
+        // Передаем токен и client_id в теле формы, без использования $accessToken в prepareRequest (чтобы не ушёл в query)
         $headers = [
             'Content-Type' => 'application/x-www-form-urlencoded',
         ];
@@ -285,9 +287,9 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
             $headers
         );
 
+        // hydrateResponse() для VK оборачивает в ['response' => $result], достанем результат
         $data = isset($response['response']) ? $response['response'] : $response;
         $userData = $data['user'] ?? null;
-
         if (!is_array($userData)) {
             throw new InvalidResponse('API response does not contain user object');
         }
@@ -297,6 +299,7 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
             'first_name' => 'firstname',
             'last_name' => 'lastname',
             'email' => 'email',
+            'phone' => 'mobilePhone',
             'avatar' => 'pictureURL',
             'birthday' => static function ($value, User $user) {
                 if ($value && strtotime($value)) {
