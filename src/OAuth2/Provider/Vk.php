@@ -254,10 +254,7 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
         ];
         $response = $this->request('POST', 'method/auth.exchangeSilentAuthToken', $query);
         if (!isset($response['response']['access_token'])) {
-            throw new InvalidResponse(
-                'API response not contain access_token field',
-                $response
-            );
+            throw new InvalidResponse('API response not contain access_token field');
         }
 
         $this->responseChangeToken = $response;
