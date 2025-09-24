@@ -135,7 +135,7 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
      * @throws InvalidResponse
      * @throws \Psr\Http\Client\ClientExceptionInterface
      */
-    public function getAccessTokenWithPkce(string $code, string $codeVerifier, bool $useClientSecret = true, ?string $redirectUri = null): AccessToken
+    public function getAccessTokenWithPkce(string $code, string $codeVerifier, ?string $redirectUri = null, ?string $deviceID = null): AccessToken
     {
         $parameters = [
             'client_id' => $this->consumer->getKey(),
@@ -143,11 +143,8 @@ class Vk extends \SocialConnect\OAuth2\AbstractProvider
             'grant_type' => 'authorization_code',
             'redirect_uri' => $redirectUri ?? $this->getRedirectUrl(),
             'code_verifier' => $codeVerifier,
+            'device_id' => $deviceID,
         ];
-
-        if ($useClientSecret) {
-            $parameters['client_secret'] = $this->consumer->getSecret();
-        }
 
         $request = $this->httpStack->createRequest('POST', $this->getRequestTokenUri())
             ->withHeader('Content-Type', 'application/x-www-form-urlencoded')
